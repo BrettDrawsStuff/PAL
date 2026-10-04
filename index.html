@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAL Prototype — Street Art Stroll</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wall:#201e22;
+    --wall-dark:#17161a;
+    --panel:#2a2730;
+    --panel-light:#332f3a;
+    --ink:#f3ede3;
+    --ink-dim:#b7b0c2;
+    --spray-orange:#ff6a3d;
+    --spray-cyan:#34d8c8;
+    --spray-pink:#ff4fa0;
+    --border:#423c4a;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 20%, rgba(255,106,61,0.08), transparent 40%),
+      radial-gradient(circle at 85% 75%, rgba(52,216,200,0.08), transparent 40%),
+      var(--wall-dark);
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:40px 20px 60px;
+  }
+  .brand{
+    text-align:center;
+    margin-bottom:28px;
+  }
+  .brand h1{
+    font-family:'Bangers', cursive;
+    font-size:2.6rem;
+    letter-spacing:1px;
+    margin:0;
+    color:var(--spray-orange);
+    text-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+  }
+  .brand p{
+    margin:6px 0 0;
+    color:var(--ink-dim);
+    font-size:0.95rem;
+  }
+
+  .layout{
+    display:flex;
+    gap:32px;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    justify-content:center;
+    max-width:900px;
+  }
+
+  /* ---- Phone frame ---- */
+  .phone{
+    width:360px;
+    height:720px;
+    background:var(--wall);
+    border:10px solid #0f0e11;
+    border-radius:38px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    position:relative;
+  }
+  .phone-notch{
+    height:22px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .phone-notch::before{
+    content:"";
+    width:90px;
+    height:6px;
+    background:#0f0e11;
+    border-radius:4px;
+  }
+
+  .app-header{
+    padding:10px 18px 14px;
+    border-bottom:1px solid var(--border);
+  }
+  .app-header .loc{
+    font-size:0.72rem;
+    color:var(--ink-dim);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+  }
+  .app-header .district{
+    font-size:1.1rem;
+    font-weight:600;
+  }
+
+  .chat-area{
+    flex:1;
+    padding:16px 14px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .chat-area::-webkit-scrollbar{width:6px;}
+  .chat-area::-webkit-scrollbar-thumb{background:var(--border); border-radius:4px;}
+
+  .msg{
+    max-width:82%;
+    padding:10px 13px;
+    border-radius:14px;
+    font-size:0.92rem;
+    line-height:1.4;
+  }
+  .msg.pal{
+    align-self:flex-start;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-bottom-left-radius:4px;
+  }
+  .msg.pal .who{
+    display:block;
+    font-family:'Bangers', cursive;
+    font-size:0.78rem;
+    letter-spacing:0.5px;
+    color:var(--spray-orange);
+    margin-bottom:3px;
+  }
+  .msg.user{
+    align-self:flex-end;
+    background:var(--spray-cyan);
+    color:#0f2d2a;
+    border-bottom-right-radius:4px;
+    font-weight:500;
+  }
+  .msg.options{
+    align-self:flex-start;
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    max-width:95%;
+  }
+  .msg.options button{
+    background:var(--panel-light);
+    border:1px solid var(--border);
+    color:var(--ink);
+    padding:7px 11px;
+    border-radius:999px;
+    font-size:0.8rem;
+    cursor:pointer;
+    font-family:'Work Sans', sans-serif;
+  }
+  .msg.options button:hover{
+    border-color:var(--spray-orange);
+    color:var(--spray-orange);
+  }
+
+  .pal-avatar-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:4px 14px 10px;
+  }
+  .pal-avatar{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--spray-pink), var(--spray-orange));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Bangers', cursive;
+    font-size:1rem;
+    color:#1c1017;
+    flex-shrink:0;
+    transition:transform .25s ease;
+  }
+  .pal-avatar.thinking{ animation:bob 0.9s ease-in-out infinite; }
+  .pal-avatar.idle{ animation:breathe 2.6s ease-in-out infinite; }
+  .pal-avatar.excited{ animation:pop .5s ease; }
+  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
+  @keyframes breathe{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.04);} }
+  @keyframes pop{ 0%{transform:scale(0.7);} 60%{transform:scale(1.12);} 100%{transform:scale(1);} }
+
+  .pal-status{
+    font-size:0.78rem;
+    color:var(--ink-dim);
+    font-style:italic;
+  }
+
+  .composer{
+    display:flex;
+    gap:8px;
+    padding:12px 14px 18px;
+    border-top:1px solid var(--border);
+  }
+  .composer input{
+    flex:1;
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--ink);
+    padding:10px 12px;
+    border-radius:10px;
+    font-family:'Work Sans', sans-serif;
+    font-size:0.9rem;
+  }
+  .composer input:focus{ outline:1px solid var(--spray-orange); }
+  .composer button{
+    background:var(--spray-orange);
+    border:none;
+    color:#1c1017;
+    font-weight:700;
+    padding:0 16px;
+    border-radius:10px;
+    cursor:pointer;
+    font-family:'Work Sans', sans-serif;
+  }
+
+  .summon-bar{
+    padding:12px 14px 16px;
+    display:flex;
+    justify-content:center;
+  }
+  .summon-btn{
+    background:var(--spray-orange);
+    color:#1c1017;
+    border:none;
+    font-family:'Bangers', cursive;
+    font-size:1.1rem;
+    letter-spacing:0.5px;
+    padding:10px 26px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 6px 16px rgba(255,106,61,0.35);
+  }
+  .summon-btn:hover{ transform:translateY(-1px); }
+
+  /* ---- Control panel (not part of the app itself — a demo harness) ---- */
+  .controls{
+    width:300px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:20px;
+  }
+  .controls h2{
+    font-family:'Bangers', cursive;
+    font-size:1.15rem;
+    color:var(--spray-cyan);
+    margin:0 0 4px;
+    letter-spacing:0.5px;
+  }
+  .controls p.sub{
+    margin:0 0 16px;
+    font-size:0.8rem;
+    color:var(--ink-dim);
+  }
+  .controls label{
+    display:block;
+    font-size:0.78rem;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-dim);
+    margin:14px 0 6px;
+  }
+  .controls select{
+    width:100%;
+    background:var(--wall);
+    border:1px solid var(--border);
+    color:var(--ink);
+    padding:9px 10px;
+    border-radius:8px;
+    font-family:'Work Sans', sans-serif;
+    font-size:0.85rem;
+  }
+  .controls .hint{
+    margin-top:18px;
+    font-size:0.78rem;
+    color:var(--ink-dim);
+    line-height:1.5;
+    border-top:1px solid var(--border);
+    padding-top:14px;
+  }
+  .controls code{
+    background:var(--wall);
+    padding:1px 5px;
+    border-radius:4px;
+    font-size:0.75rem;
+  }
+
+  @media (max-width: 720px){
+    .layout{ flex-direction:column; align-items:center; }
+    .controls{ width:360px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="brand">
+    <h1>PAL</h1>
+    <p>Public Art Locator — interactive prototype (mock data, no real backend)</p>
+  </div>
+
+  <div class="layout">
+
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="app-header">
+        <div class="loc">Street Art Stroll · RiNo, Denver</div>
+        <div class="district" id="locationLabel">Scanning area…</div>
+      </div>
+
+      <div class="chat-area" id="chatArea"></div>
+
+      <div class="pal-avatar-row">
+        <div class="pal-avatar idle" id="palAvatar">PAL</div>
+        <div class="pal-status" id="palStatus">tap "Summon PAL" to start</div>
+      </div>
+
+      <div class="composer">
+        <input type="text" id="userInput" placeholder="Ask PAL something…" />
+        <button id="sendBtn">Send</button>
+      </div>
+
+      <div class="summon-bar">
+        <button class="summon-btn" id="summonBtn">Summon PAL</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <h2>Demo Harness</h2>
+      <p class="sub">Not part of the real app — this panel just simulates GPS so you can test PAL's reactions without walking around RiNo.</p>
+
+      <label for="scenario">Simulated location</label>
+      <select id="scenario">
+        <option value="single">Near one mural (Larimer &amp; 27th)</option>
+        <option value="multi">Near two murals (Walnut St cluster)</option>
+        <option value="none">Nowhere near a mural</option>
+      </select>
+
+      <div class="hint">
+        This file is a standalone prototype of PAL's dialogue logic and GPS-matching behavior, built on mock mural data (see <code>mockMurals</code> in the script). It's meant to demonstrate the intended UX and response logic — swap in real coordinates, a live database, and PAL's real artwork once those exist.
+      </div>
+    </div>
+
+  </div>
+
+<script>
+// ---------------------------------------------------------------
+// MOCK DATA — stand-in for the real Murals/Artists backend tables
+// ---------------------------------------------------------------
+const mockMurals = [
+  {
+    id: "m1",
+    title: "Concrete Bloom",
+    artist: "J. Alvarez",
+    location: "Larimer St & 27th",
+    year: 2022,
+    description: "A large-scale floral piece wrapping the corner of a converted warehouse, done in bold freehand linework with spray-can gradients.",
+    techniques: ["freehand", "spray gradient"],
+    teachableFacts: [
+      "This one was painted over four days during a RiNo mural festival.",
+      "The artist mixes custom colors on-site rather than using pre-made cans for this kind of gradient work."
+    ],
+    scenario: ["single", "multi"]
+  },
+  {
+    id: "m2",
+    title: "Signal",
+    artist: "Dre Whitlow",
+    location: "Walnut St & 28th",
+    year: 2021,
+    description: "An abstract wildstyle lettering piece exploring interlocking letterforms.",
+    techniques: ["wildstyle", "stencil accents"],
+    teachableFacts: [
+      "Wildstyle lettering is meant to be hard to read at first glance — decoding it is half the fun."
+    ],
+    scenario: ["multi"]
+  },
+  {
+    id: "m3",
+    title: "Night Watch",
+    artist: "Priya Shah",
+    location: "35th & Brighton",
+    year: 2023,
+    description: "A stencil portrait piece, multiple layers deep, depicting a local community member.",
+    techniques: ["stencil"],
+    teachableFacts: [],
+    scenario: []
+  }
+];
+
+// nearest fallback mural when nothing is close
+const fallbackMural = mockMurals[2];
+
+// ---------------------------------------------------------------
+// STATE
+// ---------------------------------------------------------------
+let summoned = false;
+let awaitingMuralChoice = false;
+let currentMural = null;
+
+const chatArea = document.getElementById('chatArea');
+const palAvatar = document.getElementById('palAvatar');
+const palStatus = document.getElementById('palStatus');
+const locationLabel = document.getElementById('locationLabel');
+const scenarioSelect = document.getElementById('scenario');
+
+function setAvatarState(state){
+  palAvatar.className = 'pal-avatar ' + state;
+}
+
+function addMessage(text, who){
+  const div = document.createElement('div');
+  div.className = 'msg ' + who;
+  if(who === 'pal'){
+    div.innerHTML = '<span class="who">PAL</span>' + text;
+  } else {
+    div.textContent = text;
+  }
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function addOptions(options){
+  const wrap = document.createElement('div');
+  wrap.className = 'msg options';
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.textContent = opt.label;
+    btn.onclick = () => opt.onClick();
+    wrap.appendChild(btn);
+  });
+  chatArea.appendChild(wrap);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function palThink(delay, callback){
+  setAvatarState('thinking');
+  palStatus.textContent = 'thinking…';
+  setTimeout(() => {
+    callback();
+  }, delay);
+}
+
+// ---------------------------------------------------------------
+// SUMMON / GPS RECOGNITION FLOW
+// ---------------------------------------------------------------
+document.getElementById('summonBtn').addEventListener('click', () => {
+  chatArea.innerHTML = '';
+  summoned = true;
+  awaitingMuralChoice = false;
+  currentMural = null;
+  setAvatarState('idle');
+
+  const scenario = scenarioSelect.value;
+  locationLabel.textContent = scenario === 'none'
+    ? 'No murals in range'
+    : 'Checking nearby walls…';
+
+  addMessage("Hey! What are we finding today?", 'pal');
+
+  palThink(900, () => {
+    const nearby = mockMurals.filter(m => m.scenario.includes(scenario));
+
+    if (nearby.length === 0) {
+      // zero-match fallback
+      setAvatarState('idle');
+      palStatus.textContent = 'no nearby matches — showing fallback';
+      locationLabel.textContent = 'Nothing in range';
+      addMessage(
+        `Nothing right around here, but I know a piece not too far — <strong>${fallbackMural.title}</strong> by ${fallbackMural.artist} over at ${fallbackMural.location}. Want to check it out?`,
+        'pal'
+      );
+    } else if (nearby.length === 1) {
+      currentMural = nearby[0];
+      setAvatarState('excited');
+      palStatus.textContent = 'found a match!';
+      locationLabel.textContent = nearby[0].location;
+      addMessage(`Found it! This one's called <strong>${nearby[0].title}</strong>, by ${nearby[0].artist}.`, 'pal');
+      offerMuralActions(nearby[0]);
+    } else {
+      setAvatarState('idle');
+      palStatus.textContent = 'a few options nearby';
+      locationLabel.textContent = 'Multiple murals nearby';
+      addMessage("A few pieces close by — which one are you standing in front of?", 'pal');
+      awaitingMuralChoice = true;
+      addOptions(nearby.map(m => ({
+        label: m.title,
+        onClick: () => {
+          awaitingMuralChoice = false;
+          currentMural = m;
+          setAvatarState('excited');
+          addMessage(m.title, 'user');
+          palThink(500, () => {
+            setAvatarState('idle');
+            addMessage(`Nice, <strong>${m.title}</strong> by ${m.artist} — ${m.year}.`, 'pal');
+            offerMuralActions(m);
+          });
+        }
+      })));
+    }
+  });
+});
+
+function offerMuralActions(mural){
+  addOptions([
+    { label: "Tell me about it", onClick: () => askAbout(mural) },
+    { label: "What technique is this?", onClick: () => askTechnique(mural) },
+    { label: "Something I don't know", onClick: () => askUnknown(mural) }
+  ]);
+}
+
+function askAbout(mural){
+  addMessage("Tell me about it", 'user');
+  palThink(600, () => {
+    addMessage(mural.description, 'pal');
+    if (mural.teachableFacts.length){
+      const fact = mural.teachableFacts[Math.floor(Math.random()*mural.teachableFacts.length)];
+      setTimeout(() => addMessage(fact, 'pal'), 500);
+    }
+  });
+}
+
+function askTechnique(mural){
+  addMessage("What technique is this?", 'user');
+  palThink(600, () => {
+    if (mural.techniques.length){
+      addMessage(`This one uses ${mural.techniques.join(" and ")}. Want me to break down what that means?`, 'pal');
+    } else {
+      addMessage("Honestly? Not verified on this one yet — I don't want to guess. I'll flag it as something worth finding out.", 'pal');
+    }
+  });
+}
+
+function askUnknown(mural){
+  addMessage("Something I don't know", 'user');
+  palThink(700, () => {
+    addMessage("That one's a mystery to me too — I'll keep it in mind and let you know if I find out. Might be worth checking with the artist if you ever cross paths!", 'pal');
+  });
+}
+
+// ---------------------------------------------------------------
+// FREE-TEXT INPUT (simple keyword demo — not real NLP)
+// ---------------------------------------------------------------
+const glossary = {
+  "wildstyle": "Wildstyle is lettering twisted and interlocked so it's hard to read at first glance — it's more about the shapes than legibility.",
+  "stencil": "A stencil piece is painted through a cut template, which gives it crisp, repeatable edges — often built up in layers for shading.",
+  "freehand": "Freehand means no stencils or projections — just the artist painting directly, straight from the can.",
+  "throw-up": "A throw-up is a quick, simple piece — usually bubble-style letters, built for speed over detail.",
+  "piece": "Short for 'masterpiece' — a larger, more detailed work, as opposed to a quick tag or throw-up."
+};
+
+function handleUserInput(text){
+  addMessage(text, 'user');
+  const lower = text.toLowerCase();
+
+  palThink(600, () => {
+    const term = Object.keys(glossary).find(k => lower.includes(k));
+    if (term){
+      addMessage(glossary[term], 'pal');
+    } else if (awaitingMuralChoice) {
+      addMessage("Tap one of the options above so I know which piece you mean!", 'pal');
+    } else if (!summoned) {
+      addMessage("Tap \"Summon PAL\" first and I'll come find you!", 'pal');
+    } else {
+      addMessage("Not sure on that one — ask me about a term like \"wildstyle\" or \"stencil\" and I'll break it down!", 'pal');
+    }
+  });
+}
+
+document.getElementById('sendBtn').addEventListener('click', () => {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  handleUserInput(text);
+});
+
+document.getElementById('userInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('sendBtn').click();
+});
+
+// initial state
+addMessage("Tap \"Summon PAL\" to get started. Use the panel on the right to simulate being near different murals.", 'pal');
+</script>
+
+</body>
+</html>
